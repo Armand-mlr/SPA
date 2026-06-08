@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refu'Gest - Trouvez votre compagnon</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+
+   <nav class="navbar">
+    <a href="/" class="logo">🐾 Refu'Gest</a>
+
+    <div class="nav-links">
+        <a href="/" class="{{ 'active' if request.path == '/' else '' }}">Accueil</a>
+        
+        {% if session.get('logged_in') %}
+            <div class="staff-indicator">
+                <span class="staff-badge">
+                    🛡️ Staff : {{ session['prenom'] }}
+                </span>
+                <div class="staff-dropdown">
+                    <a href="/dashboard">Mon Tableau de bord</a>
+                    <a href="/pensionnaires">Gérer les animaux</a>
+                    <a href="/logout" class="logout-link">Déconnexion</a>
+                </div>
+            </div>
+        {% else %}
+            <a href="/login" class="btn-login">Espace Employé</a>
+        {% endif %}
+    </div>
+</nav>
+
+    <header class="hero">
+        <div class="hero-content">
+            <h1>Adoptez le bonheur.</h1>
+            <p>Parcourez nos refuges et trouvez l'animal qui changera votre vie.</p>
+            
+            <form action="/" method="GET" class="search-bar">
+                <input type="text" name="query" placeholder="Ville ou Code Postal (ex: Lyon, 69002)...">
+                <button type="submit">Rechercher</button>
+            </form>
+        </div>
+    </header>
+        <div id="map-section" style="padding: 20px 5%; background: #f4f7f6;">
+        <div id="mapid" style="height: 400px; width: 100%; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 1;"></div>
+        <p style="text-align: center; font-size: 0.9rem; color: #666; margin-top: 10px;">
+            💡 Cliquez sur un pin pour voir le refuge, ou cliquez sur un refuge pour le voir sur la carte.
+        </p>
+    </div>
+
+    <main class="container">
+        <h2>Nos Refuges Partenaires</h2>
+        
+        <div class="refuge-grid">
+            
+            {% for refuge in refuges %}
+            <div class="card refuge-card" id="card-{{ refuge['idrefuge'] }}" onclick="highlightPin({{ refuge['idrefuge'] }})">
+                <div class="card-header">
+                    <h3>{{ refuge['nom'] }}</h3>
+                    <span class="badge">{{ refuge['ville'] }} ({{ refuge['codepostal'] }})</span>
+                </div>
+                <div class="card-body">
+                    <p><strong>Capacité :</strong> {{ refuge['capaciteaccueil'] }} places</p>
+                    <p><strong>Téléphone :</strong> {{ refuge['telephonerefuge'] }}</p>
+                    <p class="description">Un refuge partenaire de la SPA.</p>
+                </div>
+                <div class="card-footer">
+                    <a href="/refuge/{{ refuge['idrefuge'] }}" class="btn-primary" onclick="event.stopPropagation()">Voir les animaux</a>
+                </div>
+            </div>
+
+            {% else %}
+            <p>Aucun refuge trouvé.</p>
+            {% endfor %}
+            
+        </div>
+        {% if total_pages > 1 %}
+        <div class="pagination-container">
+            
+            {% set base_url = "/search?query=" + query + "&" if query else "/?" %}
+
+            {% if page > 1 %}
+                <a href="{{ base_url }}page={{ page - 1 }}" class="page-btn">« Précédent</a>
+            {% else %}
+                <span class="page-btn disabled">« Précédent</span>
+            {% endif %}
+
+            {% for p in range(1, total_pages + 1) %}
+                <a href="{{ base_url }}page={{ p }}" class="page-num {{ 'active' if p == page else '' }}">
+                    {{ p }}
+                </a>
+            {% endfor %}
+
+            {% if page < total_pages %}
+                <a href="{{ base_url }}page={{ page + 1 }}" class="page-btn">Suivant »</a>
+            {% else %}
+                <span class="page-btn disabled">Suivant »</span>
+            {% endif %}
+        </div>
+        <p style="text-align: center; color: #888; margin-top: 10px; font-size: 0.9rem;">
+            Page {{ page }} sur {{ total_pages }}
+        </p>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Refu'Gest</p>
+    </footer>
+
+<script>
+    
+ // 1. Récupération des données Python
+    const refugesData = {{ map_data | safe }};
+    console.log("DONNÉES REÇUES DE PYTHON :", refugesData)
+
+    // 2. Initialisation de la carte
+    var mymap = L.map('mapid').setView([46.603354, 1.888334], 6);
+
+    // 3. Ajout des tuiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(mymap);
+
+    // Stockage
+    var markers = {};
+    var bounds = L.latLngBounds();
+
+    // 4. Création des pins
+    refugesData.forEach(function(refuge) {
+        // Vérification
+        if (refuge.lat && refuge.lon) {
+            
+            // CORRECTION 1 : On stocke le marqueur dans une variable 'marker'
+            // CORRECTION 2 : On utilise 'mymap' au lieu de 'map'
+            var marker = L.marker([refuge.lat, refuge.lon]).addTo(mymap);
+            
+            marker.bindPopup(`<b>${refuge.nom}</b><br>${refuge.ville}<br><a href="/refuge/${refuge.id}">Voir détails</a>`);
+
+            // On ajoute aux bounds pour le zoom auto
+            bounds.extend([refuge.lat, refuge.lon]);
+
+            // On stocke le marqueur pour l'interaction inverse (Card -> Pin)
+            markers[refuge.id] = marker;
+
+            // --- INTERACTION : CLIC SUR PIN -> REFUGE ---
+            marker.on('click', function() {
+                highlightCard(refuge.id);
+            });
+        }
+    });
+
+    // --- FONCTIONS D'INTERACTION ---
+
+    // Quand on clique sur une CARTE HTML -> Focus sur le PIN
+    function highlightPin(id) {
+        var marker = markers[id];
+        if (marker) {
+            marker.openPopup(); // Ouvre la bulle info
+            // Effet visuel (optionnel, on pourrait changer la couleur de l'icône)
+            mymap.flyTo(marker.getLatLng(), 10); // Zoom fluide vers le pin
+        }
+    }
+
+    // Quand on clique sur un PIN -> Focus sur la CARTE HTML
+    function highlightCard(id) {
+        var card = document.getElementById('card-' + id);
+        if (card) {
+            // 1. Scroll fluide jusqu'à la carte
+            card.scrollIntoView({behavior: "smooth", block: "center"});
+            
+            // 2. Effet visuel "Flash" (Bordure verte)
+            card.style.transition = "all 0.3s";
+            var originalBorder = card.style.border;
+            var originalTransform = card.style.transform;
+            
+            card.style.border = "3px solid #2ecc71"; // Vert
+            card.style.transform = "scale(1.02)";
+
+            // On remet normal après 1.5 secondes
+            setTimeout(function() {
+                card.style.border = originalBorder;
+                card.style.transform = originalTransform;
+            }, 1500);
+
+            // 3. Optionnel : Remonter en haut de la liste (DOM Manipulation)
+            // Attention : cela peut être déroutant visuellement si ça bouge trop vite
+            // Décommente la ligne suivante si tu veux vraiment déplacer l'élément :
+            // card.parentNode.prepend(card); 
+        }
+    }
+</script>
+
+<style>
+    .refuge-card {
+        cursor: pointer; /* Montre que c'est cliquable */
+    }
+</style>
+</body>
+</html>

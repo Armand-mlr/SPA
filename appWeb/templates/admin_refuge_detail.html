@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Administration Refuge - {{ refuge['nom'] }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        .sort-link { color: #555; text-decoration: none; display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.85rem; }
+        .sort-link:hover { color: #2c4530; }
+        .sort-active { color: #2c4530; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h3>🐾 Refu'Gest</h3>
+            <span class="badge-staff">Consultation</span>
+        </div>
+        <div class="user-profile-mini">
+            <div class="avatar-circle">{{ user['prenom'][0] }}{{ user['nom'][0] }}</div>
+            <div class="user-info">
+                <p class="name">{{ user['prenom'] }} {{ user['nom'] }}</p>
+                <a href="/dashboard" style="color: #A3B18A; font-size: 0.8rem;">← Retour Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        
+        <header class="top-bar">
+            <div>
+                <span style="background: #e74c3c; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold;">MODE LECTURE SEULE</span>
+                <h1>{{ refuge['nom'] }}</h1>
+                <p class="subtitle">📍 {{ refuge['ville'] }} ({{ refuge['codepostal'] }}) • 📞 {{ refuge['telephonerefuge'] }}</p>
+            </div>
+            <div class="date-display">📅 {{ now.strftime('%d/%m/%Y') }}</div>
+        </header>
+
+        <div class="dashboard-grid" style="grid-template-rows: auto auto;">
+
+            <section class="alerts-section" style="grid-column: span 3;">
+                <div class="section-header">
+                    <h2>🩺 Alertes Sanitaires (Urgences)</h2>
+                    {% if alertes %}
+                    <span class="badge-alert">{{ alertes|length }} affichées</span>
+                    {% endif %}
+                </div>
+                
+                <div class="table-container" style="max-height: 250px; overflow-y: auto;">
+                    {% if alertes %}
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Animal</th>
+                                    <th>Soin attendu</th>
+                                    <th>Échéance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alerte in alertes %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ alerte['nomanimal'] }}</strong>
+                                        <div class="animal-sub">{{ alerte['espece'] }}</div>
+                                    </td>
+                                    <td><span class="tag-soin">{{ alerte['typesoin'] }}</span></td>
+                                    <td class="{{ 'date-overdue' if alerte['dateprochainrappel'] < now else 'date-ok' }}">
+                                        {{ alerte['dateprochainrappel'].strftime('%d/%m/%Y') }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p>✅ Aucune alerte sanitaire urgente pour ce refuge.</p>
+                    {% endif %}
+                </div>
+            </section>
+            <section class="panel" style="grid-column: span 3; margin-top: 3rem;">
+                <div class="section-header">
+                    <h2>🐾 Pensionnaires Actuels</h2>
+                </div>
+
+                {% if animaux %}
+                <table class="modern-table full-width-table">
+                    <thead>
+                        <tr style="background-color: #f8f9fa;">
+                            {% macro sort_th(label, col) %}
+                            <th>
+                                <a href="{{ url_for('admin_refuge_detail', id_refuge=refuge['idrefuge'], page_animaux=1, sort_by=col, order='desc' if sort_by == col and order == 'asc' else 'asc') }}" 
+                                   class="sort-link {{ 'sort-active' if sort_by == col }}">
+                                    {{ label }}
+                                    {% if sort_by == col %}{{ '▼' if order == 'asc' else '▲' }}{% endif %}
+                                </a>
+                            </th>
+                            {% endmacro %}
+
+                            {{ sort_th('Nom', 'nom') }}
+                            {{ sort_th('Espèce / Race', 'espece') }}
+                            {{ sort_th('Âge', 'age') }}
+                            {{ sort_th('Sexe', 'sexe') }}
+                            {{ sort_th('Statut', 'statut') }}
+                            {{ sort_th('Arrivée', 'datearrive') }}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for animal in animaux %}
+                        <tr>
+                            <td><strong>{{ animal['nom'] }}</strong></td>
+                            <td>{{ animal['espece'] }} <span style="color:#999">- {{ animal['race'] }}</span></td>
+                            <td>{{ animal['age'] }} ans</td>
+                            <td>{{ animal['sexe'] }}</td>
+                            <td>
+                                <span class="status-badge {{ 'status-dispo' if animal['statut'] == 'Disponible' else ('status-adopte' if animal['statut'] == 'Adopté' else 'status-autre') }}">
+                                    {{ animal['statut'] }}
+                                </span>
+                            </td>
+                            <td>{{ animal['daterecueil'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% if total_pages_animaux > 1 %}
+                <div class="pagination-container">
+                    {% set base_url = url_for('admin_refuge_detail', id_refuge=refuge['idrefuge'], sort_by=sort_by, order=order) %}
+
+                    {% if page_animaux > 1 %}
+                        <a href="{{ base_url }}&page_animaux={{ page_animaux - 1 }}" class="page-btn">« Précédent</a>
+                    {% else %}
+                        <span class="page-btn disabled">« Précédent</span>
+                    {% endif %}
+
+                    {% for p in range(1, total_pages_animaux + 1) %}
+                        <a href="{{ base_url }}&page_animaux={{ p }}" class="page-num {{ 'active' if p == page_animaux else '' }}">
+                            {{ p }}
+                        </a>
+                    {% endfor %}
+
+                    {% if page_animaux < total_pages_animaux %}
+                        <a href="{{ base_url }}&page_animaux={{ page_animaux + 1 }}" class="page-btn">Suivant »</a>
+                    {% else %}
+                        <span class="page-btn disabled">Suivant »</span>
+                    {% endif %}
+                </div>
+                <p style="text-align: center; font-size: 0.8rem; color: #aaa; margin-top: 10px;">
+                    Page {{ page_animaux }} sur {{ total_pages_animaux }}
+                </p>
+                {% endif %}
+
+                {% else %}
+                    <p class="text-muted">Aucun animal dans ce refuge.</p>
+                {% endif %}
+            </section>
+
+        </div>
+    </main>
+</div>
+
+</body>
+</html>

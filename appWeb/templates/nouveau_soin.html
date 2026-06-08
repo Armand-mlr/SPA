@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Saisir un Soin - Refu'Gest</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <nav class="sidebar">
+        <div class="sidebar-header"><h3>🐾 Refu'Gest</h3><span class="badge-staff">Staff Access</span></div>
+        <div class="user-profile-mini">
+            <div class="avatar-circle">{{ user['prenom'][0] }}{{ user['nom'][0] }}</div>
+            <div class="user-info"><p class="name">{{ user['prenom'] }} {{ user['nom'] }}</p></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard">📊 Vue d'ensemble</a></li>
+            <li><a href="/pensionnaires">🐾 Pensionnaires</a></li>
+            <li><a href="/">🌍 Retour au site public</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <h1 class="section-title-large" style="margin-top: 0;">Saisir un Soin Vétérinaire</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-msg {{ 'flash-error' if category == 'error' else 'flash-success' }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <div class="form-container">
+            <form id="soinForm" action="/nouveau_soin" method="POST">
+                
+                <div class="form-grid">
+                    
+                    <div class="form-group full-width">
+                        <label>Patient (Animal) *</label>
+                        <select name="id_animal" required>
+                            <option value="" disabled {{ 'selected' if not selected_id }}>-- Choisir un pensionnaire --</option>
+                            {% for a in animaux %}
+                                <option value="{{ a['id'] }}" {{ 'selected' if selected_id == a['id'] }}>
+                                    {{ a['nom'] }} ({{ a['espece'] }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Type de Soin *</label>
+                        <select name="id_soin" required>
+                            <option value="" disabled selected>-- Type d'acte --</option>
+                            {% for s in soins %}
+                                <option value="{{ s['idsoin'] }}">{{ s['typesoin'] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date de l'acte *</label>
+                        <input type="date" name="date_soin" required value="{{ today }}">
+                    </div>
+
+                    <div class="form-group full-width" style="background: #fdfdfd; border: 1px dashed #ccc; padding: 15px; border-radius: 8px;">
+                        <label style="color: #e74c3c;">📅 Rappel nécessaire ? (Optionnel)</label>
+                        <input type="date" name="date_rappel">
+                        <small style="color: #666; display: block; margin-top: 5px;">
+                            Laissez vide si aucun rappel n'est prévu. Si une date est indiquée, une alerte sera créée.
+                        </small>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" onclick="openSecurityModal()" class="btn-submit-large">
+                            Enregistrer le soin
+                        </button>
+                    </div>
+
+                </div>
+
+                <input type="hidden" name="security_login" id="hidden_login">
+                <input type="hidden" name="security_password" id="hidden_password">
+
+            </form>
+        </div>
+    </main>
+</div>
+
+<div id="securityModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-icon">🔒</div>
+        <h3 style="margin-top: 0;">Authentification Staff</h3>
+        <p style="color: #666; font-size: 0.95rem; line-height: 1.5;">
+            Veuillez confirmer votre identité pour valider cet acte médical.
+        </p>
+        
+        <div style="text-align: left; margin-top: 20px;">
+            <div class="form-group">
+                <label>Votre Identifiant</label>
+                <input type="text" id="modal_login" placeholder="Login...">
+            </div>
+            <div class="form-group">
+                <label>Votre Mot de passe</label>
+                <input type="password" id="modal_password" placeholder="Mot de passe...">
+            </div>
+        </div>
+
+        <div class="modal-buttons">
+            <button onclick="closeSecurityModal()" class="btn-cancel">Annuler</button>
+            <button onclick="submitRealForm()" class="btn-confirm">Valider l'acte</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openSecurityModal() {
+        const form = document.getElementById('soinForm');
+        if (form.checkValidity()) {
+            document.getElementById('securityModal').classList.add('show');
+        } else {
+            form.reportValidity();
+        }
+    }
+
+    function closeSecurityModal() {
+        document.getElementById('securityModal').classList.remove('show');
+    }
+
+    function submitRealForm() {
+        const login = document.getElementById('modal_login').value;
+        const pass = document.getElementById('modal_password').value;
+
+        if(!login || !pass) {
+            alert("Merci de remplir vos identifiants.");
+            return;
+        }
+
+        document.getElementById('hidden_login').value = login;
+        document.getElementById('hidden_password').value = pass;
+        document.getElementById('soinForm').submit();
+    }
+</script>
+
+</body>
+</html>
