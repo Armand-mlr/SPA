@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liste des Pensionnaires - Refu'Gest</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <style>
+        .sort-link { color: #555; text-decoration: none; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .sort-link:hover { color: #2c4530; }
+        .sort-active { color: #2c4530; font-weight: bold; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="admin-wrapper">
+    <nav class="sidebar">
+        <div class="sidebar-header"><h3>🐾 Refu'Gest</h3><span class="badge-staff">Staff Access</span></div>
+        <div class="user-profile-mini">
+            <div class="avatar-circle">{{ user['prenom'][0] }}{{ user['nom'][0] }}</div>
+            <div class="user-info"><p class="name">{{ user['prenom'] }} {{ user['nom'] }}</p></div>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="/dashboard">📊 Vue d'ensemble</a></li>
+            <li><a href="/pensionnaires" class="active">🐾 Pensionnaires</a></li>
+            <li><a href="/">🌍 Retour au site public</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h1 class="section-title-large" style="margin: 0; border: none;">Registre des Pensionnaires</h1>
+            
+            <form method="GET" action="/pensionnaires" class="filter-bar">
+                <label>Afficher : </label>
+                <select name="filtre" onchange="this.form.submit()">
+                    <option value="tous" {{ 'selected' if filtre == 'tous' }}>Tout l'historique</option>
+                    <option value="presents" {{ 'selected' if filtre == 'presents' }}>Présents uniquement</option>
+                </select>
+                <input type="hidden" name="page" value="1">
+                <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                <input type="hidden" name="order" value="{{ order }}">
+            </form>
+        </div>
+        
+        <div class="panel" style="padding: 0; overflow: hidden;">
+            <table class="modern-table full-width-table">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        {% macro sort_header(title, col_name) %}
+                            <th style="padding-left: 20px;">
+                                <a href="{{ url_for('pensionnaires', page=1, filtre=filtre, sort_by=col_name, order='desc' if sort_by == col_name and order == 'asc' else 'asc') }}" 
+                                   class="sort-link {{ 'sort-active' if sort_by == col_name }}">
+                                    {{ title }}
+                                    {% if sort_by == col_name %}
+                                        {{ '▲' if order == 'asc' else '▼' }}
+                                    {% else %}
+                                        <span style="font-size: 0.8rem; opacity: 0.3;"></span>
+                                    {% endif %}
+                                </a>
+                            </th>
+                        {% endmacro %}
+
+                        <th style="padding-left: 20px;">
+                            <div style="display: flex; gap: 15px;">
+                                <a href="{{ url_for('pensionnaires', page=1, filtre=filtre, sort_by='nom', order='desc' if sort_by == 'nom' and order == 'asc' else 'asc') }}" class="sort-link {{ 'sort-active' if sort_by == 'nom' }}">Nom {{ '▲' if sort_by=='nom' and order=='asc' else ('▼' if sort_by=='nom' else '') }}</a>
+                                /
+                                <a href="{{ url_for('pensionnaires', page=1, filtre=filtre, sort_by='espece', order='desc' if sort_by == 'espece' and order == 'asc' else 'asc') }}" class="sort-link {{ 'sort-active' if sort_by == 'espece' }}">Espèce {{ '▲' if sort_by=='espece' and order=='asc' else ('▼' if sort_by=='espece' else '') }}</a>
+                            </div>
+                        </th>
+                        
+                        {{ sort_header('Race', 'race') }}
+                        {{ sort_header('Statut', 'statut') }}
+                        {{ sort_header('Arrivée', 'date_arrive') }}
+                        {{ sort_header('Départ', 'date_depart') }}
+                        
+                        <th></th> </tr>
+                </thead>
+                <tbody>
+                    {% for a in animaux %}
+                    <tr class="{{ 'highlight-row' if not a['datedepart'] else '' }}">
+                        <td style="padding-left: 20px;">
+                            <div class="animal-name">{{ a['nom'] }}</div>
+                            <div class="animal-sub">{{ a['espece'] }}</div>
+                        </td>
+                        <td>{{ a['race'] if a['race'] else '-' }}</td>
+                        <td>
+                            <span class="status-badge {{ 'status-dispo' if a['statut'] == 'Disponible' else ('status-adopte' if a['statut'] == 'Adopté' else 'status-autre') }}">
+                                {{ a['statut'] }}
+                            </span>
+                        </td>
+                        <td>{{ a['datearrive'] }}</td>
+                        <td>
+                            {% if a['datedepart'] %}
+                                <span style="color: #999;">{{ a['datedepart'] }}</span>
+                            {% else %}
+                                <span style="color: #2ecc71; font-weight: bold;">Actuellement ici</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/staff/animal/{{ a['id'] }}" class="btn-icon">📄</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="padding: 40px; text-align: center; color: #888;">
+                            Aucun animal trouvé pour ce filtre.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if total_pages > 1 %}
+        <div class="pagination-container">
+            {% set base_url = "/pensionnaires?filtre=" + filtre + "&sort_by=" + sort_by + "&order=" + order + "&" %}
+
+            {% if page > 1 %}
+                <a href="{{ base_url }}page={{ page - 1 }}" class="page-btn">« Précédent</a>
+            {% else %}
+                <span class="page-btn disabled">« Précédent</span>
+            {% endif %}
+
+            {% for p in range(1, total_pages + 1) %}
+                <a href="{{ base_url }}page={{ p }}" class="page-num {{ 'active' if p == page else '' }}">
+                    {{ p }}
+                </a>
+            {% endfor %}
+
+            {% if page < total_pages %}
+                <a href="{{ base_url }}page={{ page + 1 }}" class="page-btn">Suivant »</a>
+            {% else %}
+                <span class="page-btn disabled">Suivant »</span>
+            {% endif %}
+        </div>
+        <p style="text-align: center; font-size: 0.8rem; color: #aaa; margin-top: 10px;">Page {{ page }} sur {{ total_pages }}</p>
+        {% endif %}
+
+    </main>
+</div>
+
+</body>
+</html>
