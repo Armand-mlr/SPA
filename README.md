@@ -76,33 +76,47 @@ L'entité centrale du modèle est l'**Animal**, dont on conserve tout l'historiq
 
 ```
 .
-├── app.py                  # Serveur Flask principal — point d'entrée
-├── db.py                   # Connexion psycopg2 à PostgreSQL (à configurer)
-├── dump.sql                # Dump complet de la base : structure + données + vues
-├── spa.sql                 # Script de création annoté (schéma, contraintes CHECK, données)
-├── generateSQl.py          # Utilitaire one-shot de hachage des mots de passe employés
-├── templates/              # Templates Jinja2 (pages HTML)
-│   ├── home.html               # Accueil + carte + recherche
-│   ├── refuge_detail.html      # Détail public d'un refuge
-│   ├── login.html              # Connexion staff
-│   ├── dashboard.html          # Tableau de bord
-│   ├── admin_refuge_detail.html# Détail d'un refuge (vue staff)
-│   ├── pensionnaires.html      # Liste des pensionnaires
-│   ├── staff_animal_detail.html# Fiche animal + historique de soins
-│   ├── nouveau_pensionnaire.html
-│   ├── nouveau_soin.html
-│   ├── adoption.html
-│   └── transfert.html
-├── static/                 # Fichiers statiques
-│   ├── requetesSQL.py          # Bibliothèque des requêtes SQL (importée par app.py)
-│   ├── css/ · js/ · images/    # Styles, scripts (carte), médias
-│   └── ...
-├── rapport.pdf             # Rapport final du projet
-├── Consignes.pdf           # Sujet — consignes générales
-└── SPA.pdf                 # Sujet — énoncé « Refuges de la SPA »
+├── ConceptualisationBDD/               # Documents de conception (étapes 1 & 2)
+│   ├── BDDFinale.pdf                        # Rapport de conception de la base
+│   └── SchemaEA_SPA.pdf                     # Schéma entité-association (MCD)
+│
+├── Sujet/                              # Énoncé du projet
+│   ├── Consignes.pdf                        # Consignes générales
+│   └── SPA.pdf                              # Énoncé « Refuges de la SPA »
+│
+├── appWeb/                             # Application web (code source + livrables)
+│   ├── static/                             # Fichiers statiques
+│   │   ├── __pycache__/                        # Cache Python (généré — à gitignorer)
+│   │   ├── requetesSQL.py                      # Bibliothèque des requêtes SQL (importée par app.py)
+│   │   ├── style.css                           # Styles globaux du site
+│   │   └── dashboard.css                       # Styles spécifiques au tableau de bord
+│   │
+│   ├── templates/                          # Templates Jinja2 (pages HTML)
+│   │   ├── home.html                           # Accueil + carte + recherche
+│   │   ├── refuge_detail.html                  # Détail public d'un refuge
+│   │   ├── login.html                          # Connexion staff
+│   │   ├── dashboard.html                      # Tableau de bord
+│   │   ├── admin_refuge_detail.html            # Détail d'un refuge (vue staff)
+│   │   ├── pensionnaires.html                  # Liste des pensionnaires
+│   │   ├── staff_animal_detail.html            # Fiche animal + historique de soins
+│   │   ├── nouveau_pensionnaire.html
+│   │   ├── nouveau_soin.html
+│   │   ├── adoption.html
+│   │   └── transfert.html
+│   │
+│   ├── app.py                              # Serveur Flask principal — point d'entrée
+│   ├── db.py                               # Connexion psycopg2 à PostgreSQL (à configurer)
+│   ├── dump.sql                            # Dump complet de la base : structure + données + vues
+│   ├── spa.sql                             # Script de création annoté (schéma, contraintes CHECK, données)
+│   ├── generateSQl.py                      # Utilitaire one-shot de hachage des mots de passe employés
+│   └── rapport.pdf                         # Rapport final du projet
+│
+└── README.md
 ```
 
-> ⚠️ Le fichier `static/requetesSQL.py` est importé via `import static.requetesSQL`. L'application doit donc **être lancée depuis la racine du projet** pour que cet import se résolve correctement.
+> ⚠️ Le code applicatif se trouve dans **`appWeb/`**. Comme `requetesSQL.py` y est importé via `import static.requetesSQL`, le serveur doit être lancé **depuis le dossier `appWeb/`** (`cd appWeb` avant `python app.py`) pour que cet import se résolve correctement.
+>
+> 💡 Il n'y a **pas de fichiers JavaScript séparés** : le JS (carte Leaflet, fenêtre modale de double authentification) est intégré directement dans les templates HTML, et Leaflet est chargé via CDN.
 
 ---
 
@@ -122,8 +136,10 @@ Rien n'étant hébergé, voici la marche à suivre pour exécuter l'application 
 
 ```bash
 git clone https://github.com/<votre-compte>/<nom-du-repo>.git
-cd <nom-du-repo>
+cd <nom-du-repo>/appWeb        # tout le code de l'application se trouve dans appWeb/
 ```
+
+> Les commandes des étapes suivantes (`psql … -f dump.sql`, édition de `db.py`, `python app.py`) sont à exécuter **depuis ce dossier `appWeb/`**.
 
 ### 2. Créer la base de données et l'utilisateur PostgreSQL
 
