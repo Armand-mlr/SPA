@@ -33,8 +33,8 @@ Projet réalisé dans le cadre du cours de **Bases de données** (L2 Maths-Info,
 
 Le site répond à **deux cadres d'utilisation** :
 
-- **Partie publique** — Le grand public consulte la carte des refuges partenaires et la liste des animaux disponibles à l'adoption.
-- **Partie administration (espace staff)** — Les employés, après authentification, gèrent les pensionnaires, les soins, les transferts et les adoptions, et suivent les alertes de rappels de vaccins.
+- **Partie publique** — Le grand public consulte la carte des refuges partenaires et la liste des animaux disponibles à l'adoption. *Page d'accueil -> Image 1 & 2 "visuel.pdf"*
+- **Partie administration (espace staff)** — Les employés, après authentification, gèrent les pensionnaires, les soins, les transferts et les adoptions, et suivent les alertes de rappels de vaccins.*Page d'accueil staff -> Image 3 "visuel.pdf"*
 
 L'entité centrale du modèle est l'**Animal**, dont on conserve tout l'historique : son refuge d'origine (fourrière), tous les refuges par lesquels il est passé (table `Heberge` datée), ses soins (association ternaire Animal × Employé × Type de soin) et son éventuelle adoption.
 
