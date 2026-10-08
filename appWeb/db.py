@@ -1,13 +1,13 @@
 import psycopg2
 import psycopg2.extras
-
+#Need to adapt to your database info.
 def connect():
     try:
         conn = psycopg2.connect(
-            dbname='armandmlr',
+            dbname='armand_db',
             host='localhost',
-            user='armandmlr',
-            password='xxxxx',
+            user='Armand',
+            password='x',
             port=5432,
             cursor_factory=psycopg2.extras.NamedTupleCursor
         )
