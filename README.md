@@ -17,11 +17,9 @@ Projet réalisé dans le cadre du cours de **Bases de données** (L2 Maths-Info,
 
 Une minute pour découvrir Refu'Gest, du site public jusqu'à l'espace staff.
 
-<p align="center">
-  <a href="animation/refugest.mp4">
-    <img src="animation/apercu.jpg" alt="Regarder la vidéo de présentation de Refu'Gest" width="820">
-  </a>
-</p>
+https://github.com/user-attachments/assets/fe0f43a4-8948-45d8-a881-d3703943b25b
+
+<sub>📥 Version haute définition : [animation/refugest.mp4](animation/refugest.mp4) (bouton « View raw » pour la télécharger).</sub>
 
 **Au programme :**
 
