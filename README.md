@@ -13,8 +13,31 @@ Projet réalisé dans le cadre du cours de **Bases de données** (L2 Maths-Info,
 
 ---
 
+## 🎬 Vidéo de présentation
+
+Une minute pour découvrir Refu'Gest, du site public jusqu'à l'espace staff.
+
+<p align="center">
+  <a href="animation/refugest.mp4">
+    <img src="animation/apercu.jpg" alt="Regarder la vidéo de présentation de Refu'Gest" width="820">
+  </a>
+</p>
+
+**Au programme :**
+
+- 🗺️ la recherche d'un refuge et la carte interactive ;
+- 🐱 la fiche d'un refuge et les filtres sur les animaux ;
+- 🔐 la connexion à l'espace staff et le tableau de bord ;
+- 🏠 une adoption, avec la double authentification ;
+- 🗄️ un aperçu de la base de données.
+
+<sub>Vidéo réalisée a posteriori par **Ramy Metahri** · données de démonstration fictives.</sub>
+
+---
+
 ## 📋 Sommaire
 
+- [Vidéo de présentation](#-vidéo-de-présentation)
 - [Aperçu](#-aperçu)
 - [Fonctionnalités](#-fonctionnalités)
 - [Stack technique](#-stack-technique)
