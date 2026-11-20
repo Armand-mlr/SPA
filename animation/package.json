@@ -1,0 +1,23 @@
+{
+  "name": "refugest-animation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vidéo de présentation de Refu'Gest (Remotion)",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts RefuGest out/refugest.mp4",
+    "music": "node scripts/music.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.545",
+    "@remotion/google-fonts": "^4.0.545",
+    "@remotion/transitions": "^4.0.545",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.545"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  }
+}
